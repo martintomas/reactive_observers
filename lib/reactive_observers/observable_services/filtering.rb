@@ -1,5 +1,5 @@
 module ReactiveObservers
-  module Observable
+  module ObservableServices
     class Filtering
       def initialize(observers, action, options)
         @observers = observers
@@ -21,7 +21,8 @@ module ReactiveObservers
       def filter_fields(observers)
         return observers unless @action == :update && @options[:diff].present?
 
-        observers.select { |observer| observer[:fields].blank? || (observer[:fields] & @options[:diff].keys).positive? }
+        changed_fields = @options[:diff].keys.map &:to_sym
+        observers.select { |observer| observer[:fields].blank? || (observer[:fields] & changed_fields).length.positive? }
       end
     end
   end

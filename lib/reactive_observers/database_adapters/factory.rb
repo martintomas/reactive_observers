@@ -1,11 +1,11 @@
 module ReactiveObservers
-  module DbListeners
-    module SimpleFactory
+  module DatabaseAdapters
+    module Factory
       def initialize(configuration)
         @configuration = configuration
       end
 
-      def initialize_db_listeners
+      def initialize_observer_listeners
         collect_databases.each do |database|
           case database
           when :postgresql
@@ -15,6 +15,8 @@ module ReactiveObservers
           end
         end
       end
+
+      private
 
       def collect_databases
         @configuration.observed_tables.map do |observed_table|

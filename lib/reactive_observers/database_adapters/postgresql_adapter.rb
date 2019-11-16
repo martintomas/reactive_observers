@@ -1,5 +1,5 @@
 module ReactiveObservers
-  module DbListeners
+  module DatabaseAdapters
     class PostgresqlAdapter
       def initialize(configuration)
         @configuration = configuration
@@ -21,9 +21,9 @@ module ReactiveObservers
       end
 
       def process_notification_for(data)
-        klass = data[:table].classify.constantize
+        return unless @configuration.observed_tables.include? data[:table]
 
-        klass.listener_services.each { |service| method(service).call data }
+        data[:table].classify.constantize.listener_services.each { |service| method(service).call data }
       end
     end
   end

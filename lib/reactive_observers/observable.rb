@@ -1,14 +1,17 @@
-require 'reactive_observers/observable/process_notifications'
+require 'reactive_observers/observable_services/db_listener'
+require 'reactive_observers/observable_services/notification'
+
+require 'active_support/concern'
 
 module ReactiveObservers
-  class Observable
+  module Observable
     extend ActiveSupport::Concern
-    include DbListener
+    include ObservableServices::DbListener
 
     included do
       class_attribute :active_observers
       self.active_observers = []
-      register_db_listener :process_db_notification
+      register_observer_listener :process_db_notification
 
       after_create do
         process_hook_notification :create
@@ -33,6 +36,7 @@ module ReactiveObservers
       def register_klass_observer(options)
         options[:on] = Array.wrap options[:on]
         options[:fields] = Array.wrap options[:fields]
+        options[:trigger] ||= Configuration.instance.default_trigger
         active_observers << options
       end
 
@@ -58,7 +62,7 @@ module ReactiveObservers
     def process_observer_notifications(action, **options)
       return if self.class.active_observers.blank?
 
-      Observable::ProcessNotifications.new(self, self.class.active_observers, action, options).perform
+      ObservableServices::Notification.new(self, self.class.active_observers, action, options).perform
     end
   end
 end
