@@ -1,28 +1,34 @@
 module ReactiveObservers
   module ObservableServices
     class Filtering
-      def initialize(observers, action, options)
+      def initialize(observed_object_id, observers, action, options)
+        @observed_object_id = observed_object_id
         @observers = observers
         @action = action
         @options = options
       end
 
       def perform
-        @observers.then { |observers| filter_action observers }
-                  .then { |observers| filter_fields observers }
+        @observers.select do |observer|
+          filter_action(observer) && filter_record_constrains(observer) && filter_fields(observer)
+        end
       end
 
       private
 
-      def filter_action(observers)
-        observers.select { |observer| observer[:on].blank? || observer[:on].include?(@action) }
+      def filter_action(observer)
+        observer[:on].blank? || observer[:on].include?(@action)
       end
 
-      def filter_fields(observers)
-        return observers unless @action == :update && @options[:diff].present?
+      def filter_record_constrains(observer)
+        observer[:constrain].blank? || observer[:constrain].include?(@observed_object_id)
+      end
+
+      def filter_fields(observer)
+        return true unless @action == :update && @options[:diff].present?
 
         changed_fields = @options[:diff].keys.map &:to_sym
-        observers.select { |observer| observer[:fields].blank? || (observer[:fields] & changed_fields).length.positive? }
+        observer[:fields].blank? || (observer[:fields] & changed_fields).length.positive?
       end
     end
   end

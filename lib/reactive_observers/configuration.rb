@@ -7,7 +7,7 @@ module ReactiveObservers
     attr_accessor :listening_job_name, :observed_tables, :default_trigger
 
     def initialize
-      @listening_job_name = :observer_notices
+      @listening_job_name = "%{table_name}_notices"
       @observed_tables = []
       @default_trigger = :changed
     end

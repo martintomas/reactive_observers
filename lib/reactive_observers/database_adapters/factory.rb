@@ -6,22 +6,28 @@ module ReactiveObservers
       end
 
       def initialize_observer_listeners
-        collect_databases.each do |database|
-          case database
-          when :postgresql
-            PostgresqlAdapter.new(@configuration).start_listening_job
+        collect_database_adapters.each do |database_adapter, klasses|
+          case database_adapter
+          when 'PostgreSQL'
+            PostgreSQLAdapter.new(@configuration, klasses).start_listening
+          when 'PostGIS'
+            PostgreSQLAdapter.new(@configuration, klasses).start_listening
           else
-            raise StandardError, 'Reactive observers cannot be run with current database!'
+            raise StandardError, "Reactive observers cannot be run with this database adapter: #{database_adapter}!"
           end
         end
       end
 
       private
 
-      def collect_databases
-        @configuration.observed_tables.map do |observed_table|
-          observed_table.classify.constantize.connection.current_database
-        end.uniq
+      def collect_database_adapters
+        {}.tap do |result|
+          @configuration.observed_tables.map do |observed_table|
+            klass = observed_table.classify.constantize
+            adapter = klass.connection.adapter_name
+            result[adapter] = (result[adapter] || []) << klass
+          end
+        end
       end
     end
   end

@@ -1,29 +1,19 @@
 module ReactiveObservers
   module DatabaseAdapters
-    class PostgresqlAdapter
-      def initialize(configuration)
-        @configuration = configuration
-      end
+    class PostgreSQLAdapter < AbstractAdapter
 
-      def start_listening_job
-        Rails.logger.debug  "Postgresql adapter listening_job started"
+      private
+
+      def create_listening_job_for(klass)
         Thread.new do
-          Rails.logger.debug  "listening_job running on #{@configuration.listening_job_name}"
-          ActiveRecord::Base.connection.execute "LISTEN #{@configuration.listening_job_name}"
+          klass.connection.execute "LISTEN #{ @configuration.instance.listening_job_name % { table_name: klass.name.pluralize.underscore }}"
           loop do
-            ActiveRecord::Base.connection.raw_connection.wait_for_notify do |event, pid, payload|
+            klass.connection.raw_connection.wait_for_notify do |event, pid, payload|
               data = JSON.parse payload, symbolize_names: true
-              Rails.logger.debug "postgres #{event.inspect}, pid: #{pid.inspect}, data: #{data.inspect}"
-              process_notification_for data
+              process_notification_for data, klass
             end
           end
         end.abort_on_exception = true
-      end
-
-      def process_notification_for(data)
-        return unless @configuration.observed_tables.include? data[:table]
-
-        data[:table].classify.constantize.listener_services.each { |service| method(service).call data }
       end
     end
   end
