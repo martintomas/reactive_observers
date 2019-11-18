@@ -3,12 +3,12 @@ require 'reactive_observers/observable_services/db_listener'
 
 module ReactiveObservers
   module ObservableServices
-    class DbListenerTest < Minitest::Test
+    class DbListenerTest < ActiveSupport::TestCase
       class DummyClass
         include ReactiveObservers::ObservableServices::DbListener
       end
 
-      def test_adding_new_db_listener
+      test 'add new method as db listener' do
         assert_empty DummyClass.observer_listener_services
 
         DummyClass.register_observer_listener :notification_service

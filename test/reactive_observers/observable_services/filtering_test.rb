@@ -1,41 +1,57 @@
 require "test_helper"
+require 'reactive_observers/observer/container'
 require 'reactive_observers/observable_services/filtering'
 
 module ReactiveObservers
   module ObservableServices
-    class FilteringTest < Minitest::Test
-      def setup
-        @observers = [{ observer_id: 1, constrain: [1, 2] },
-                      { observer_id: 2, on: [:create, :update], fields: [:first_name, :last_name], constrain: [1, 2] },
-                      { observer_id: 3, on: [:update], fields: [:last_name], constrain: [1] }]
+    class FilteringTest < ActiveSupport::TestCase
+      class Observer
+        def changed; end
       end
 
-      def test_action_filtering
-        filtered_observers = ReactiveObservers::ObservableServices::Filtering.new(1, @observers, :create, {}).perform
+      setup do
+        @observer1 = ReactiveObservers::Observer::Container.new(Observer, Topic.first, {})
+        @observer2 = ReactiveObservers::Observer::Container.new(Observer, Topic.first, on: [:create, :update], fields: [:first_name, :last_name])
+        @observer3 = ReactiveObservers::Observer::Container.new(Observer, Topic.first, on: [:update], fields: [:last_name])
+        @observers = [@observer1, @observer2, @observer3]
+      end
+
+      test '#perfom - select all fields' do
+        filtered_observers = ReactiveObservers::ObservableServices::Filtering.new(Topic.first.id, @observers, :update, diff: { last_name: 'Black' }).perform
+
+        assert_equal 3, filtered_observers.length
+        assert filtered_observers.any?(@observer1)
+        assert filtered_observers.any?(@observer2)
+        assert filtered_observers.any?(@observer3)
+      end
+
+      test '#perform - filter based on action' do
+        filtered_observers = ReactiveObservers::ObservableServices::Filtering.new(Topic.first.id, @observers, :create, {}).perform
 
         assert_equal 2, filtered_observers.length
-        assert filtered_observers.any? { |observer| observer[:observer_id] == 1 }
-        assert filtered_observers.any? { |observer| observer[:observer_id] == 2 }
-        assert filtered_observers.none? { |observer| observer[:observer_id] == 3 }
+        assert filtered_observers.any?(@observer1)
+        assert filtered_observers.any?(@observer2)
+        assert filtered_observers.none?(@observer3)
       end
 
-      def test_fields_filtering
+      test '#perform - filter based on fields' do
         changed_fields = { city: 'Prague', first_name: 'John' }
-        filtered_observers = ReactiveObservers::ObservableServices::Filtering.new(1, @observers, :update, diff: changed_fields).perform
+        filtered_observers = ReactiveObservers::ObservableServices::Filtering.new(Topic.first.id, @observers, :update, diff: changed_fields).perform
 
         assert_equal 2, filtered_observers.length
-        assert filtered_observers.any? { |observer| observer[:observer_id] == 1 }
-        assert filtered_observers.any? { |observer| observer[:observer_id] == 2 }
-        assert filtered_observers.none? { |observer| observer[:observer_id] == 3 }
+        assert filtered_observers.any?(@observer1)
+        assert filtered_observers.any?(@observer2)
+        assert filtered_observers.none?(@observer3)
       end
 
-      def test_constrain_filtering
-        filtered_observers = ReactiveObservers::ObservableServices::Filtering.new(2, @observers, :update, {}).perform
+      test '#perform - filter based on constrain' do
+        @observer3.constrain = [Topic.last.id]
+        filtered_observers = ReactiveObservers::ObservableServices::Filtering.new(Topic.first.id, @observers, :update, {}).perform
 
         assert_equal 2, filtered_observers.length
-        assert filtered_observers.any? { |observer| observer[:observer_id] == 1 }
-        assert filtered_observers.any? { |observer| observer[:observer_id] == 2 }
-        assert filtered_observers.none? { |observer| observer[:observer_id] == 3 }
+        assert filtered_observers.any?(@observer1)
+        assert filtered_observers.any?(@observer2)
+        assert filtered_observers.none?(@observer3)
       end
     end
   end

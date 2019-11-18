@@ -12,7 +12,7 @@ module ReactiveObservers
 
       def perform
         filter_observers.each do |observer|
-          next if observer[:only].present? && !observer[:only].call(@observed_object)
+          next if observer.only.present? && !observer.only.call(@observed_object)
 
           trigger_actions_for observer, Array.wrap(refine_observer_records_for(observer))
         end
@@ -27,42 +27,46 @@ module ReactiveObservers
       def trigger_actions_for(observer, records)
         records.each do |record|
           Array.wrap(observer_objects_for(observer, record)).each do |observer_object|
-            observer_object = (observer_object == record) || (observer[:object].blank? && observer_object.is_a?(record.class)) ? record : observer_object
+            observer_object = observer_simplification?(observer, observer_object, record) ? record : observer_object
             trigger_observer_action_for observer, observer_object, record
           end
         end
       end
 
       def trigger_observer_action_for(observer, observer_object, record)
-        trigger = build_proc_for observer[:trigger], observer_object
+        trigger = build_proc_for observer.trigger, observer_object
         return trigger.call if observer_object == record
 
         trigger.call record
       end
 
       def refine_observer_records_for(observer)
-        return @observed_object if observer[:refine].blank?
+        return @observed_object if observer.refine.blank?
 
-        observer[:refine].call @observed_object
+        observer.refine.call @observed_object
       end
 
       def observer_objects_for(observer, record)
-        return observer_objects_from_klass observer, record if observer[:object].blank?
-        return build_proc_for(observer[:notify], observer[:object]).call(observer[:object], record) if observer[:notify].present?
+        return observer_objects_from_klass observer, record if observer.klass_observer?
+        return build_proc_for(observer.notify, observer.observer).call(observer.observer, record) if observer.notify.present?
 
-        observer[:object]
+        observer.observer
       end
 
       def observer_objects_from_klass(observer, record)
-        return build_proc_for(observer[:notify], observer[:klass]).call(record) if observer[:notify].present?
+        return build_proc_for(observer.notify, observer.observer).call(record) if observer.notify.present?
 
-        observer[:klass].new
+        observer.observer.new
       end
 
       def build_proc_for(variable, object)
         return variable unless variable.is_a? Symbol
 
         object.method variable
+      end
+
+      def observer_simplification?(observer, record, observer_object)
+        (observer_object == record) || (observer.klass_observer? && observer_object.is_a?(record.class))
       end
     end
   end

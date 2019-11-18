@@ -1,0 +1,11 @@
+first_comment:
+  text: first
+  topic: first
+
+second_comment:
+  text: second
+  topic: first
+
+third_comment:
+  text: first
+  topic: second

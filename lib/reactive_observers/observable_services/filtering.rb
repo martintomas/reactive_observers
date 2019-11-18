@@ -17,18 +17,18 @@ module ReactiveObservers
       private
 
       def filter_action(observer)
-        observer[:on].blank? || observer[:on].include?(@action)
+        observer.on.blank? || observer.on.include?(@action)
       end
 
       def filter_record_constrains(observer)
-        observer[:constrain].blank? || observer[:constrain].include?(@observed_object_id)
+        observer.constrain.blank? || observer.constrain.include?(@observed_object_id)
       end
 
       def filter_fields(observer)
         return true unless @action == :update && @options[:diff].present?
 
         changed_fields = @options[:diff].keys.map &:to_sym
-        observer[:fields].blank? || (observer[:fields] & changed_fields).length.positive?
+        observer.fields.blank? || (observer.fields & changed_fields).length.positive?
       end
     end
   end

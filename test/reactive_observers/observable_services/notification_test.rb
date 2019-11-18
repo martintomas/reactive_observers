@@ -1,9 +1,11 @@
 require "test_helper"
+require 'minitest/stub_any_instance'
+require 'reactive_observers/observer/container'
 require 'reactive_observers/observable_services/notification'
 
 module ReactiveObservers
   module ObservableServices
-    class NotificationTest < Minitest::Test
+    class NotificationTest <  ActiveSupport::TestCase
       class ObserverNotified < StandardError; end
       class DummyObservable
         def id
@@ -29,114 +31,154 @@ module ReactiveObservers
         end
       end
 
-      def test_only_filtering_option_when_observer_is_filtered_out
-        observers = [{ object: DummyObserver.new, trigger: :changed_with, only: ->(value) { !value.is_a?(DummyObservable) }}]
-        ReactiveObservers::ObservableServices::Notification.new(DummyObservable.new, observers, :update, {}).perform
-      end
-
-      def test_only_filtering_option_when_observer_is_not_filtered_out
-        assert_raises(ObserverNotified) do
-          observers = [{ object: DummyObserver.new, trigger: :changed_with, only: ->(value) { value.is_a?(DummyObservable) }}]
-          ReactiveObservers::ObservableServices::Notification.new(DummyObservable.new, observers, :update, {}).perform
+      test '#perform - use only filtering option and filter observer out' do
+        turn_off_active_record_check! do |observer|
+          observer.only = ->(value) { !value.is_a?(DummyObservable) }
+          ReactiveObservers::ObservableServices::Notification.new(DummyObservable.new, [observer], :update, {}).perform
         end
       end
 
-      def test_observer_trigger_can_be_proc
-        assert_raises(ObserverNotified) do
-          observers = [{ object: DummyObserver.new, trigger: -> (*) { raise ObserverNotified } }]
-          ReactiveObservers::ObservableServices::Notification.new(DummyObservable.new, observers, :update, {}).perform
+      test '#perform - use only filtering option and do not filter observer out' do
+        turn_off_active_record_check! do |observer|
+          assert_raises(ObserverNotified) do
+            observer.only = ->(value) { value.is_a?(DummyObservable) }
+            ReactiveObservers::ObservableServices::Notification.new(DummyObservable.new, [observer], :update, {}).perform
+          end
         end
       end
 
-      def test_observer_can_be_klass
-        assert_raises(ObserverNotified) do
-          observers = [{ klass: DummyObserver, trigger: :changed_with }]
-          ReactiveObservers::ObservableServices::Notification.new(DummyObservable.new, observers, :update, {}).perform
+      test '#perform - observer trigger can be proc' do
+        turn_off_active_record_check! do |observer|
+          assert_raises(ObserverNotified) do
+            observer.trigger = -> (*) { raise ObserverNotified }
+            ReactiveObservers::ObservableServices::Notification.new(DummyObservable.new, [observer], :update, {}).perform
+          end
         end
       end
 
-      def test_observer_can_be_klass_with_special_constructor
-        observer_klass_mock = Minitest::Mock.new
-        observer_klass_mock.expect :new, DummyObserver.new, [DummyObservable]
-
-        assert_raises(ObserverNotified) do
-          observers = [{ klass: DummyObserver, trigger: :changed_with, notify: ->(value) { observer_klass_mock.new(value) } }]
-          ReactiveObservers::ObservableServices::Notification.new(DummyObservable.new, observers, :update, {}).perform
-        end
-
-        observer_klass_mock.verify
-      end
-
-      def test_observer_can_be_klass_with_special_constructor_which_can_return_array
-        observer_klass_mock = Minitest::Mock.new
-        observer_klass_mock.expect :new, [DummyObserver.new], [DummyObservable]
-
-        assert_raises(ObserverNotified) do
-          observers = [{ klass: DummyObserver, trigger: :changed_with, notify: ->(value) { observer_klass_mock.new(value) } }]
-          ReactiveObservers::ObservableServices::Notification.new(DummyObservable.new, observers, :update, {}).perform
-        end
-
-        observer_klass_mock.verify
-      end
-
-      def test_observer_object_can_use_notify_field_to_specify_notified_objects
-        observer_klass_mock = Minitest::Mock.new
-        observer_klass_mock.expect :new, [DummyObserver.new], [DummyObserver, DummyObservable]
-
-        assert_raises(ObserverNotified) do
-          observers = [{ object: DummyObserver.new, trigger: :changed_with, notify: ->(observer, value) { observer_klass_mock.new(observer, value) } }]
-          ReactiveObservers::ObservableServices::Notification.new(DummyObservable.new, observers, :update, {}).perform
-        end
-
-        observer_klass_mock.verify
-      end
-
-      def test_observer_klass_constructor_can_be_symbol
-        assert_raises(ObserverNotified) do
-          observers = [{ klass: DummyObserver, trigger: :changed_with, notify: :initialize_dummy_object }]
-          ReactiveObservers::ObservableServices::Notification.new(DummyObservable.new, observers, :update, {}).perform
+      test '#perform - observer can be klass' do
+        turn_off_active_record_check! do |observer|
+          assert_raises(ObserverNotified) do
+            observer.observer = DummyObserver
+            ReactiveObservers::ObservableServices::Notification.new(DummyObservable.new, [observer], :update, {}).perform
+          end
         end
       end
 
-      def test_observable_result_can_be_refined
-        response = 'observed_information'
+      test '#perform - observer can be klass with special constructor' do
+        turn_off_active_record_check! do |observer|
+          observer_klass_mock = Minitest::Mock.new
+          observer_klass_mock.expect :new, DummyObserver.new, [DummyObservable]
 
-        exception = assert_raises(ObserverNotified) do
-          observers = [{ klass: DummyObserver, trigger: :changed_with, refine: -> (*) { response }}]
-          ReactiveObservers::ObservableServices::Notification.new(DummyObservable.new, observers, :update, {}).perform
-        end
-        assert_equal response, exception.message
-      end
+          assert_raises(ObserverNotified) do
+            observer.observer = DummyObserver
+            observer.notify = ->(value) { observer_klass_mock.new(value) }
+            ReactiveObservers::ObservableServices::Notification.new(DummyObservable.new, [observer], :update, {}).perform
+          end
 
-      def test_observable_result_can_be_refined_which_can_return_array
-        response = 'observed_information'
-
-        exception = assert_raises(ObserverNotified) do
-          observers = [{ klass: DummyObserver, trigger: :changed_with, refine: -> (*) { [response] }}]
-          ReactiveObservers::ObservableServices::Notification.new(DummyObservable.new, observers, :update, {}).perform
-        end
-        assert_equal response, exception.message
-      end
-
-      def test_observer_object_is_called_directly_when_observer_klass_and_observable_object_are_same
-        assert_raises(ObserverNotified) do
-          observers = [{ klass: DummyObserver, trigger: :changed }]
-          ReactiveObservers::ObservableServices::Notification.new(DummyObserver.new, observers, :update, {}).perform
+          observer_klass_mock.verify
         end
       end
 
-      def test_observer_object_is_called_directly_when_observer_and_observable_objects_are_same
-        assert_raises(ObserverNotified) do
-          object = DummyObserver.new
-          observers = [{ object: object, trigger: :changed }]
-          ReactiveObservers::ObservableServices::Notification.new(object, observers, :update, {}).perform
+      test '#perform - observer can be klass with special constructor which returns array' do
+        turn_off_active_record_check! do |observer|
+          observer_klass_mock = Minitest::Mock.new
+          observer_klass_mock.expect :new, [DummyObserver.new], [DummyObservable]
+
+          assert_raises(ObserverNotified) do
+            observer.observer = DummyObserver
+            observer.notify = ->(value) { observer_klass_mock.new(value) }
+            ReactiveObservers::ObservableServices::Notification.new(DummyObservable.new, [observer], :update, {}).perform
+          end
+
+          observer_klass_mock.verify
         end
       end
 
-      def test_observer_object_is_not_called_directly_when_objects_are_different
-        assert_raises(ObserverNotified) do
-          observers = [{ object: DummyObserver.new, trigger: :changed_with }]
-          ReactiveObservers::ObservableServices::Notification.new(DummyObserver.new, observers, :update, {}).perform
+      test '#perform - observer object can use notify field to specify notified objects' do
+        turn_off_active_record_check! do |observer|
+          observer_klass_mock = Minitest::Mock.new
+          observer_klass_mock.expect :new, [DummyObserver.new], [DummyObserver, DummyObservable]
+
+          assert_raises(ObserverNotified) do
+            observer.notify = ->(observer, value) { observer_klass_mock.new(observer, value) }
+            ReactiveObservers::ObservableServices::Notification.new(DummyObservable.new, [observer], :update, {}).perform
+          end
+
+          observer_klass_mock.verify
+        end
+      end
+
+      test '#perform - notify param can be symbol' do
+        turn_off_active_record_check! do |observer|
+          assert_raises(ObserverNotified) do
+            observer.observer = DummyObserver
+            observer.notify = :initialize_dummy_object
+            ReactiveObservers::ObservableServices::Notification.new(DummyObservable.new, [observer], :update, {}).perform
+          end
+        end
+      end
+
+      test '#perform - observable result can be refined' do
+        turn_off_active_record_check! do |observer|
+          response = 'observed_information'
+
+          exception = assert_raises(ObserverNotified) do
+            observer.refine = -> (*) { response }
+            ReactiveObservers::ObservableServices::Notification.new(DummyObservable.new, [observer], :update, {}).perform
+          end
+          assert_equal response, exception.message
+        end
+      end
+
+      test '#perform - observable result can be refined which can return array' do
+        turn_off_active_record_check! do |observer|
+          response = 'observed_information'
+
+          exception = assert_raises(ObserverNotified) do
+            observer.refine = -> (*) { [response] }
+            ReactiveObservers::ObservableServices::Notification.new(DummyObservable.new, [observer], :update, {}).perform
+          end
+          assert_equal response, exception.message
+        end
+      end
+
+      test '#perform - observer object is called directly when observer klass and observable object are same' do
+        turn_off_active_record_check! do |observer|
+          assert_raises(ObserverNotified) do
+            observer.observer = DummyObserver
+            observer.trigger = :changed
+            ReactiveObservers::ObservableServices::Notification.new(DummyObserver.new, [observer], :update, {}).perform
+          end
+        end
+      end
+
+      test '#perform - observer object is called directly when observer and observable objects are same' do
+        turn_off_active_record_check! do |observer|
+          assert_raises(ObserverNotified) do
+            object = DummyObserver.new
+            observer.observer = object
+            observer.trigger = :changed
+            ReactiveObservers::ObservableServices::Notification.new(object, [observer], :update, {}).perform
+          end
+        end
+      end
+
+      test '#perform - observer object is not called directly when objects are different' do
+        turn_off_active_record_check! do |observer|
+          assert_raises(ObserverNotified) do
+            observer.observer = DummyObserver.new
+            ReactiveObservers::ObservableServices::Notification.new(DummyObserver.new, [observer], :update, {}).perform
+          end
+        end
+      end
+
+      private
+
+      def turn_off_active_record_check!
+        ReactiveObservers::Observer::ContainerValidator.stub_any_instance :validate_observe_active_record!, true do
+          observer = ReactiveObservers::Observer::Container.new DummyObserver.new, DummyObservable, trigger: :changed_with
+          yield observer
         end
       end
     end

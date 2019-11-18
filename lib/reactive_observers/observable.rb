@@ -28,19 +28,14 @@ module ReactiveObservers
     end
 
     class_methods do
-      def register_observer(observer, **options)
-        options[:on] = Array.wrap options[:on]
-        options[:fields] = Array.wrap options[:fields]
-        options[:trigger] ||= Configuration.instance.default_trigger
-        observer.is_a?(Class) ? options.merge!(klass: observer) : options.merge!(object: observer)
-        return if active_observers.any? { |active_observer| active_observer == options }
+      def register_observer(observer)
+        return if active_observers.any? { |active_observer| active_observer.compare.full? observer }
 
-        active_observers << options
+        active_observers << observer
       end
 
       def remove_observer(observer, **options)
-        observer.is_a?(Class) ? options.merge!(klass: observer) : options.merge!(object: observer)
-        ObservableServices::Removing.new(active_observers, options).perform
+        ObservableServices::Removing.new(active_observers, observer, options).perform
       end
 
       def process_observer_notification(data)
