@@ -27,8 +27,11 @@ module ReactiveObservers
       def filter_fields(observer)
         return true unless @action == :update && @options[:diff].present?
 
-        changed_fields = @options[:diff].keys.map &:to_sym
         observer.fields.blank? || (observer.fields & changed_fields).length.positive?
+      end
+
+      def changed_fields
+        @changed_fields ||= @options[:diff].keys.map &:to_sym
       end
     end
   end

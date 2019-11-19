@@ -13,11 +13,8 @@ module ReactiveObservers
       end
 
       def full?(observer)
-        @observer.observer == observer.observer &&
-          @observed == observer.observed &&
-          array_compare_of(@observer.fields, observer.fields) &&
-          array_compare_of(@observer.on, observer.on) &&
-          constrain_compare_with(observer.constrain) &&
+        partial?(observer.observer, fields: observer.fields, on: observer.on, constrain: observer.constrain) &&
+          @observer.observed == observer.observed &&
           @observer.trigger == observer.trigger &&
           @observer.notify == observer.notify &&
           @observer.refine == observer.refine &&

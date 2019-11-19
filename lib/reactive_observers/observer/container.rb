@@ -30,10 +30,20 @@ module ReactiveObservers
         @observer.is_a? Class
       end
 
+      def klass_observed?
+        @observed.is_a? Class
+      end
+
       def observer_klass
         return @observer if klass_observer?
 
         @observer.class
+      end
+
+      def observed_klass
+        return @observed if klass_observed?
+
+        @observed.class
       end
 
       private

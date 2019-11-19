@@ -9,6 +9,7 @@ module ReactiveObservers
         validate_observe_trigger!
         validate_observe_notification!
         validate_observe_active_record!
+        true
       end
 
       private
@@ -20,15 +21,18 @@ module ReactiveObservers
       end
 
       def validate_observe_notification!
-        return unless @observer.notify.blank? && @observer.observer_klass.method(:new).arity.positive?
+        return if @observer.notify.present? || !@observer.klass_observer?
 
+        @observer.observer.new
+      rescue ArgumentError
         raise ArgumentError, "Notify parameter is required for observer class #{@observer.observer_klass.name} which has complex initialization"
       end
 
       def validate_observe_active_record!
-        return unless @observer.observed.class.is_a? ActiveRecord
+        return if (!@observer.klass_observed? && @observer.observed.is_a?(ActiveRecord::Base)) ||
+          (@observer.klass_observed? && @observer.observed <= ActiveRecord::Base)
 
-        raise ArgumentError, "Class #{@observer.observed.class.name} is not Active Record class"
+        raise ArgumentError, "Class #{@observer.observed_klass.name} is not Active Record class"
       end
     end
   end
