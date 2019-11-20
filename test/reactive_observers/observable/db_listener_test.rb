@@ -1,11 +1,11 @@
 require "test_helper"
-require 'reactive_observers/observable_services/db_listener'
+require 'reactive_observers/observable/db_listener'
 
 module ReactiveObservers
-  module ObservableServices
+  module Observable
     class DbListenerTest < ActiveSupport::TestCase
       class DummyClass
-        include ReactiveObservers::ObservableServices::DbListener
+        include ReactiveObservers::Observable::DbListener
       end
 
       test 'add new method as db listener' do

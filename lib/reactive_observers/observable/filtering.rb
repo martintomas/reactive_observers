@@ -1,5 +1,5 @@
 module ReactiveObservers
-  module ObservableServices
+  module Observable
     class Filtering
       def initialize(observed_object_id, observers, action, options)
         @observed_object_id = observed_object_id

@@ -6,7 +6,7 @@ module ReactiveObservers
     class Container
 
       attr_accessor :observer, :observed
-      attr_accessor :trigger, :notify, :refine
+      attr_accessor :trigger, :notify, :refine, :context
       attr_accessor :fields, :on, :only, :constrain
 
       def initialize(observer, observed, options)
@@ -18,6 +18,7 @@ module ReactiveObservers
         @trigger = options[:trigger] || Configuration.instance.default_trigger
         @notify = options[:notify]
         @refine = options[:refine]
+        @context = options[:context]
         ReactiveObservers::Observer::ContainerValidator.new(self).run_validations!
         @constrain = load_observer_constrains
       end
@@ -44,6 +45,11 @@ module ReactiveObservers
         return @observed if klass_observed?
 
         @observed.class
+      end
+
+      def to_h
+        { observer: @observer, observed: @observed, fields: @fields, on: @on, only: @only, constrain: @constrain,
+          trigger: @trigger, refine: @refine, notify: @notify, context: @context}
       end
 
       private

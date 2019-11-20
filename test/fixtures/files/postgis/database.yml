@@ -1,8 +1,8 @@
 default: &default
-  adapter: postgresql
+  adapter: postgis
   encoding: unicode
   pool: 5
 
 test:
   <<: *default
-  database: reactive_observers_postgresql_test
+  database: reactive_observers_postgis_test

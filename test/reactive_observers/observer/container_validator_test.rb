@@ -7,10 +7,11 @@ module ReactiveObservers
     class ContainerValidatorTest < ActiveSupport::TestCase
       class ComplexNewObserver
         def initialize(value1, value2); end
-        def changed; end
+
+        def changed(value, **observer); end
       end
       class Observer
-        def changed; end
+        def changed(value, **observer); end
       end
 
       test '#run_validations! - proper observer' do

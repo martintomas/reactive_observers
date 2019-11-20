@@ -1,7 +1,7 @@
-require 'reactive_observers/observable_services/filtering'
+require 'reactive_observers/observable/filtering'
 
 module ReactiveObservers
-  module ObservableServices
+  module Observable
     class Notification
       def initialize(observed_object, observers, action, options)
         @observed_object = observed_object
@@ -35,9 +35,9 @@ module ReactiveObservers
 
       def trigger_observer_action_for(observer, observer_object, record)
         trigger = build_proc_for observer.trigger, observer_object
-        return trigger.call if observer_object == record
+        return trigger.call observer.to_h if observer_object == record
 
-        trigger.call record
+        trigger.call record, observer.to_h
       end
 
       def refine_observer_records_for(observer)

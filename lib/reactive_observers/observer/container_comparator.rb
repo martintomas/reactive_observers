@@ -9,6 +9,7 @@ module ReactiveObservers
         @observer.observer == observer &&
           array_compare_of(@observer.fields, options[:fields]) &&
           array_compare_of(@observer.on, options[:on]) &&
+          context_compare_with(options[:context]) &&
           constrain_compare_with(options[:constrain])
       end
 
@@ -30,6 +31,10 @@ module ReactiveObservers
       def constrain_compare_with(value)
         value = Array.wrap value
         value.blank? || @observer.constrain == value || (@observer.constrain & value).length.positive?
+      end
+
+      def context_compare_with(value)
+        value.blank? || @observer.context == value
       end
     end
   end

@@ -6,7 +6,8 @@ module ReactiveObservers
     class ContainerTest < ActiveSupport::TestCase
       class Observer
         def self.init(value); end
-        def updated; end
+
+        def updated(value, **observer); end
       end
 
       test '#initialize - simple' do

@@ -1,10 +1,10 @@
 require "test_helper"
 require 'minitest/stub_any_instance'
 require 'reactive_observers/observer/container'
-require 'reactive_observers/observable_services/notification'
+require 'reactive_observers/observable/notification'
 
 module ReactiveObservers
-  module ObservableServices
+  module Observable
     class NotificationTest <  ActiveSupport::TestCase
       class ObserverNotified < StandardError; end
       class DummyObservable
@@ -22,11 +22,11 @@ module ReactiveObservers
           2
         end
 
-        def changed
+        def changed(**observer)
           raise ObserverNotified
         end
 
-        def changed_with(value)
+        def changed_with(value, **observer)
           raise ObserverNotified, value
         end
       end
@@ -34,7 +34,7 @@ module ReactiveObservers
       test '#perform - use only filtering option and filter observer out' do
         turn_off_active_record_check! do |observer|
           observer.only = ->(value) { !value.is_a?(DummyObservable) }
-          ReactiveObservers::ObservableServices::Notification.new(DummyObservable.new, [observer], :update, {}).perform
+          ReactiveObservers::Observable::Notification.new(DummyObservable.new, [observer], :update, {}).perform
         end
       end
 
@@ -42,7 +42,7 @@ module ReactiveObservers
         turn_off_active_record_check! do |observer|
           assert_raises(ObserverNotified) do
             observer.only = ->(value) { value.is_a?(DummyObservable) }
-            ReactiveObservers::ObservableServices::Notification.new(DummyObservable.new, [observer], :update, {}).perform
+            ReactiveObservers::Observable::Notification.new(DummyObservable.new, [observer], :update, {}).perform
           end
         end
       end
@@ -51,8 +51,20 @@ module ReactiveObservers
         turn_off_active_record_check! do |observer|
           assert_raises(ObserverNotified) do
             observer.trigger = -> (*) { raise ObserverNotified }
-            ReactiveObservers::ObservableServices::Notification.new(DummyObservable.new, [observer], :update, {}).perform
+            ReactiveObservers::Observable::Notification.new(DummyObservable.new, [observer], :update, {}).perform
           end
+        end
+      end
+
+      test '#perform - trigger can obtain details of observer' do
+        context = 'This is observer context'
+        turn_off_active_record_check! do |observer|
+          exception = assert_raises(ObserverNotified) do
+            observer.context = context
+            observer.trigger = -> (value, context:, **observer) { raise ObserverNotified, context }
+            ReactiveObservers::Observable::Notification.new(DummyObservable.new, [observer], :update, {}).perform
+          end
+          assert_equal context, exception.message
         end
       end
 
@@ -60,7 +72,7 @@ module ReactiveObservers
         turn_off_active_record_check! do |observer|
           assert_raises(ObserverNotified) do
             observer.observer = DummyObserver
-            ReactiveObservers::ObservableServices::Notification.new(DummyObservable.new, [observer], :update, {}).perform
+            ReactiveObservers::Observable::Notification.new(DummyObservable.new, [observer], :update, {}).perform
           end
         end
       end
@@ -73,7 +85,7 @@ module ReactiveObservers
           assert_raises(ObserverNotified) do
             observer.observer = DummyObserver
             observer.notify = ->(value) { observer_klass_mock.new(value) }
-            ReactiveObservers::ObservableServices::Notification.new(DummyObservable.new, [observer], :update, {}).perform
+            ReactiveObservers::Observable::Notification.new(DummyObservable.new, [observer], :update, {}).perform
           end
 
           observer_klass_mock.verify
@@ -88,7 +100,7 @@ module ReactiveObservers
           assert_raises(ObserverNotified) do
             observer.observer = DummyObserver
             observer.notify = ->(value) { observer_klass_mock.new(value) }
-            ReactiveObservers::ObservableServices::Notification.new(DummyObservable.new, [observer], :update, {}).perform
+            ReactiveObservers::Observable::Notification.new(DummyObservable.new, [observer], :update, {}).perform
           end
 
           observer_klass_mock.verify
@@ -102,7 +114,7 @@ module ReactiveObservers
 
           assert_raises(ObserverNotified) do
             observer.notify = ->(observer, value) { observer_klass_mock.new(observer, value) }
-            ReactiveObservers::ObservableServices::Notification.new(DummyObservable.new, [observer], :update, {}).perform
+            ReactiveObservers::Observable::Notification.new(DummyObservable.new, [observer], :update, {}).perform
           end
 
           observer_klass_mock.verify
@@ -114,7 +126,7 @@ module ReactiveObservers
           assert_raises(ObserverNotified) do
             observer.observer = DummyObserver
             observer.notify = :initialize_dummy_object
-            ReactiveObservers::ObservableServices::Notification.new(DummyObservable.new, [observer], :update, {}).perform
+            ReactiveObservers::Observable::Notification.new(DummyObservable.new, [observer], :update, {}).perform
           end
         end
       end
@@ -125,7 +137,7 @@ module ReactiveObservers
 
           exception = assert_raises(ObserverNotified) do
             observer.refine = -> (*) { response }
-            ReactiveObservers::ObservableServices::Notification.new(DummyObservable.new, [observer], :update, {}).perform
+            ReactiveObservers::Observable::Notification.new(DummyObservable.new, [observer], :update, {}).perform
           end
           assert_equal response, exception.message
         end
@@ -137,7 +149,7 @@ module ReactiveObservers
 
           exception = assert_raises(ObserverNotified) do
             observer.refine = -> (*) { [response] }
-            ReactiveObservers::ObservableServices::Notification.new(DummyObservable.new, [observer], :update, {}).perform
+            ReactiveObservers::Observable::Notification.new(DummyObservable.new, [observer], :update, {}).perform
           end
           assert_equal response, exception.message
         end
@@ -148,7 +160,7 @@ module ReactiveObservers
           assert_raises(ObserverNotified) do
             observer.observer = DummyObserver
             observer.trigger = :changed
-            ReactiveObservers::ObservableServices::Notification.new(DummyObserver.new, [observer], :update, {}).perform
+            ReactiveObservers::Observable::Notification.new(DummyObserver.new, [observer], :update, {}).perform
           end
         end
       end
@@ -159,7 +171,7 @@ module ReactiveObservers
             object = DummyObserver.new
             observer.observer = object
             observer.trigger = :changed
-            ReactiveObservers::ObservableServices::Notification.new(object, [observer], :update, {}).perform
+            ReactiveObservers::Observable::Notification.new(object, [observer], :update, {}).perform
           end
         end
       end
@@ -168,7 +180,7 @@ module ReactiveObservers
         turn_off_active_record_check! do |observer|
           assert_raises(ObserverNotified) do
             observer.observer = DummyObserver.new
-            ReactiveObservers::ObservableServices::Notification.new(DummyObserver.new, [observer], :update, {}).perform
+            ReactiveObservers::Observable::Notification.new(DummyObserver.new, [observer], :update, {}).perform
           end
         end
       end

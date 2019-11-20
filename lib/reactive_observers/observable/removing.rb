@@ -1,5 +1,5 @@
 module ReactiveObservers
-  module ObservableServices
+  module Observable
     class Removing
       REQUIRED_FIELDS = %i[klass object].freeze
 

@@ -7,7 +7,8 @@ module ReactiveObservers
     class ContainerComparatorTest < ActiveSupport::TestCase
       class Observer
         def self.init(value); end
-        def changed; end
+
+        def changed(value, **observer); end
       end
 
       test '#partial? - same combinations' do
@@ -20,10 +21,15 @@ module ReactiveObservers
         observer = ReactiveObservers::Observer::Container.new(Comment.first, Topic.first, on: :create, fields: [:first_name, :last_name])
         assert ReactiveObservers::Observer::ContainerComparator.new(observer).partial?(Comment.first, constrain: [Topic.first.id])
         assert ReactiveObservers::Observer::ContainerComparator.new(observer).partial?(Comment.first, on: [:create, :update], constrain: [Topic.first.id])
-      end
+
+        observer = ReactiveObservers::Observer::Container.new(Comment, Topic, context: :test)
+        assert ReactiveObservers::Observer::ContainerComparator.new(observer).partial?(Comment, context: :test)
+        assert ReactiveObservers::Observer::ContainerComparator.new(observer).partial?(Comment, {})
+    end
 
       test '#partial? - different combinations' do
         observer = ReactiveObservers::Observer::Container.new(Comment, Topic, on: :create, fields: [:first_name, :last_name])
+        refute ReactiveObservers::Observer::ContainerComparator.new(observer).partial?(Comment, context: :test)
         refute ReactiveObservers::Observer::ContainerComparator.new(observer).partial?(Topic, {})
         refute ReactiveObservers::Observer::ContainerComparator.new(observer).partial?(Comment.first, {})
         refute ReactiveObservers::Observer::ContainerComparator.new(observer).partial?(Comment, on: :destroy)
@@ -33,6 +39,9 @@ module ReactiveObservers
         refute ReactiveObservers::Observer::ContainerComparator.new(observer).partial?(Comment, constrain: [Topic.first.id])
         refute ReactiveObservers::Observer::ContainerComparator.new(observer).partial?(Comment.first, constrain: [Topic.last.id])
         refute ReactiveObservers::Observer::ContainerComparator.new(observer).partial?(Comment.first, on: :destroy, constrain: [Topic.first.id])
+
+        observer = ReactiveObservers::Observer::Container.new(Comment, Topic, context: :test)
+        refute ReactiveObservers::Observer::ContainerComparator.new(observer).partial?(Comment, context: :test2)
       end
 
       test '#full? - same combinations' do

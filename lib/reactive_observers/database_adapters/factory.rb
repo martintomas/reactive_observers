@@ -1,6 +1,8 @@
+require 'reactive_observers/database_adapters/postgresql_adapter'
+
 module ReactiveObservers
   module DatabaseAdapters
-    module Factory
+    class Factory
       def initialize(configuration)
         @configuration = configuration
       end
@@ -23,7 +25,7 @@ module ReactiveObservers
       def collect_database_adapters
         {}.tap do |result|
           @configuration.observed_tables.map do |observed_table|
-            klass = observed_table.classify.constantize
+            klass = observed_table.to_s.classify.constantize
             adapter = klass.connection.adapter_name
             result[adapter] = (result[adapter] || []) << klass
           end

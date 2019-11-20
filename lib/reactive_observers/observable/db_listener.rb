@@ -1,7 +1,7 @@
 require 'active_support/concern'
 
 module ReactiveObservers
-  module ObservableServices
+  module Observable
     module DbListener
       extend ActiveSupport::Concern
 

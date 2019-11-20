@@ -12,4 +12,6 @@ group :test do
   gem 'simplecov'
 
   gem 'pg'
+  gem 'activerecord-postgis-adapter'
+  gem 'sqlite3'
 end
