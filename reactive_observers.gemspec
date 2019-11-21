@@ -6,16 +6,16 @@ Gem::Specification.new do |spec|
   spec.authors       = ["martintomas"]
   spec.email         = ["tomas@jchsoft.cz"]
 
-  spec.summary       = %q{Define dependent actions for your action records super simple way}
-  spec.description   = %q{This gem adds observer pattern to your active records. Active record updates can be observer super simple and robust way which allows you to define specific observer classes or use observers as part of any class. Keep your actions at one place where It is easy to maintain and modify! }
-  # spec.homepage      = "TODO: Put your gem's website or public repo URL here."
+  spec.summary       = %q{Observe Active Record classes and records super simple way!}
+  spec.description   = %q{This gem allows you to write down specialized Observer classes or make observer from every possible class/object that You can think of. Observable module is using build in Active Record hooks or database triggers which can be turned on in multiple App environment. }
+  spec.homepage      = "https://github.com/martintomas/reactive_observers.git"
   spec.license       = "MIT"
   spec.required_ruby_version = Gem::Requirement.new(">= 2.3.0")
 
   # spec.metadata["allowed_push_host"] = "TODO: Set to 'http://mygemserver.com'"
 
-  # spec.metadata["homepage_uri"] = spec.homepage
-  # spec.metadata["source_code_uri"] = "TODO: Put your gem's public repo URL here."
+  spec.metadata["homepage_uri"] = spec.homepage
+  spec.metadata["source_code_uri"] = "https://github.com/martintomas/reactive_observers.git"
   # spec.metadata["changelog_uri"] = "TODO: Put your gem's CHANGELOG.md URL here."
 
   # Specify which files should be added to the gem when it is released.

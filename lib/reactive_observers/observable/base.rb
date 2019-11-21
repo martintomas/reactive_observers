@@ -59,7 +59,7 @@ module ReactiveObservers
       end
 
       def process_observer_hook_notification(action, **options)
-        return if Configuration.instance.observed_tables.include?(self.class.table_name.to_sym) || self.class.active_observers.blank?
+        return if ReactiveObservers.configuration.observed_tables.include?(self.class.table_name.to_sym) || self.class.active_observers.blank?
 
         process_observer_notifications action, **options
       end

@@ -8,7 +8,7 @@ module ReactiveObservers
     included do; end
 
     class_methods do
-      def observe(observed, refine: nil, trigger: Configuration.instance.default_trigger, notify: nil, **options)
+      def observe(observed, refine: nil, trigger: ReactiveObservers.configuration.default_trigger, notify: nil, **options)
         add_observer_to_observable self, observed, options.merge(refine: refine, trigger: trigger, notify: notify)
       end
 
@@ -19,7 +19,7 @@ module ReactiveObservers
       end
     end
 
-    def observe(observed, refine: nil, trigger: Configuration.instance.default_trigger, notify: nil, **options)
+    def observe(observed, refine: nil, trigger: ReactiveObservers.configuration.default_trigger, notify: nil, **options)
       self.class.add_observer_to_observable self, observed, options.merge(refine: refine, trigger: trigger, notify: notify)
     end
   end

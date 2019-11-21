@@ -4,7 +4,7 @@ require 'reactive_observers/observer/container'
 module ReactiveObservers
   module Observer
     class ContainerTest < ActiveSupport::TestCase
-      class Observer
+      class ObserverModified
         def self.init(value); end
 
         def updated(value, **observer); end
@@ -15,7 +15,7 @@ module ReactiveObservers
 
         assert_equal Comment, observer.observer
         assert_equal Topic, observer.observed
-        assert_equal Configuration.instance.default_trigger, observer.trigger
+        assert_equal ReactiveObservers.configuration.default_trigger, observer.trigger
         assert_equal [], observer.on
         assert_equal [], observer.fields
         assert_equal [], observer.constrain
@@ -29,7 +29,7 @@ module ReactiveObservers
       end
 
       test '#initialize - complex' do
-        observer_object = Observer.new
+        observer_object = ObserverModified.new
         observer = ReactiveObservers::Observer::Container.new(observer_object, Topic.first, trigger: :updated, notify: :init, on: :create, fields: [:first_name, :last_name],
                                                               only: ->() {}, refine: -> {})
 
@@ -44,7 +44,7 @@ module ReactiveObservers
         refute_nil observer.refine
         refute observer.klass_observer?
         refute observer.klass_observed?
-        assert_equal Observer, observer.observer_klass
+        assert_equal ObserverModified, observer.observer_klass
         assert_equal Topic, observer.observed_klass
       end
 

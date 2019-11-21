@@ -6,13 +6,13 @@ module ReactiveObservers
     class AbstractAdapterTest < ActiveSupport::TestCase
       test '#start_listening' do
         assert_raise(NotImplementedError) do
-          ReactiveObservers::DatabaseAdapters::AbstractAdapter.new(Configuration.instance, [Topic]).start_listening
+          ReactiveObservers::DatabaseAdapters::AbstractAdapter.new(ReactiveObservers.configuration, [Topic]).start_listening
         end
       end
 
       test '#stop_listening' do
         assert_raise(NotImplementedError) do
-          ReactiveObservers::DatabaseAdapters::AbstractAdapter.new(Configuration.instance, [Topic]).stop_listening
+          ReactiveObservers::DatabaseAdapters::AbstractAdapter.new(ReactiveObservers.configuration, [Topic]).stop_listening
         end
       end
     end

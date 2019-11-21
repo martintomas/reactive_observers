@@ -9,9 +9,11 @@ require 'active_record'
 module ReactiveObservers
   class Error < StandardError; end
 
+  mattr_accessor :configuration, default: Configuration.new
+
   def self.configure
-    self.configuration ||= Configuration.instance
-    yield(configuration)
+    self.configuration ||= Configuration.new
+    yield(configuration) if block_given?
     DatabaseAdapters::Factory.new(configuration).initialize_observer_listeners
   end
 end

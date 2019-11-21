@@ -5,12 +5,6 @@ require 'reactive_observers/observer/container_comparator'
 module ReactiveObservers
   module Observer
     class ContainerComparatorTest < ActiveSupport::TestCase
-      class Observer
-        def self.init(value); end
-
-        def changed(value, **observer); end
-      end
-
       test '#partial? - same combinations' do
         observer = ReactiveObservers::Observer::Container.new(Comment, Topic, on: :create, fields: [:first_name, :last_name])
         assert ReactiveObservers::Observer::ContainerComparator.new(observer).partial?(Comment, {})
@@ -45,38 +39,38 @@ module ReactiveObservers
       end
 
       test '#full? - same combinations' do
-        compared_observer = ReactiveObservers::Observer::Container.new(Observer, Topic, trigger: :changed, notify: :init)
-        compared_observer1 = ReactiveObservers::Observer::Container.new(Observer, Topic, trigger: :changed, notify: :init)
+        compared_observer = ReactiveObservers::Observer::Container.new(CustomObserver, Topic, trigger: :changed, notify: :init)
+        compared_observer1 = ReactiveObservers::Observer::Container.new(CustomObserver, Topic, trigger: :changed, notify: :init)
         assert ReactiveObservers::Observer::ContainerComparator.new(compared_observer).full?(compared_observer1)
 
-        compared_observer = ReactiveObservers::Observer::Container.new(Observer, Topic.first, trigger: :changed, notify: :init)
-        compared_observer1 = ReactiveObservers::Observer::Container.new(Observer, Topic.first, trigger: :changed, notify: :init)
+        compared_observer = ReactiveObservers::Observer::Container.new(CustomObserver, Topic.first, trigger: :changed, notify: :init)
+        compared_observer1 = ReactiveObservers::Observer::Container.new(CustomObserver, Topic.first, trigger: :changed, notify: :init)
         assert ReactiveObservers::Observer::ContainerComparator.new(compared_observer).full?(compared_observer1)
       end
 
       test '#full? - different combinations' do
-        compared_observer = ReactiveObservers::Observer::Container.new(Observer, Topic, {})
-        compared_observer1 = ReactiveObservers::Observer::Container.new(Observer, Topic, trigger: :changed, notify: :init)
+        compared_observer = ReactiveObservers::Observer::Container.new(CustomObserver, Topic, {})
+        compared_observer1 = ReactiveObservers::Observer::Container.new(CustomObserver, Topic, trigger: :changed, notify: :init)
         refute ReactiveObservers::Observer::ContainerComparator.new(compared_observer).full?(compared_observer1)
 
-        compared_observer = ReactiveObservers::Observer::Container.new(Observer, Topic, trigger: :changed, notify: :init)
-        compared_observer1 = ReactiveObservers::Observer::Container.new(Observer, Topic, {})
+        compared_observer = ReactiveObservers::Observer::Container.new(CustomObserver, Topic, trigger: :changed, notify: :init)
+        compared_observer1 = ReactiveObservers::Observer::Container.new(CustomObserver, Topic, {})
         refute ReactiveObservers::Observer::ContainerComparator.new(compared_observer).full?(compared_observer1)
 
-        compared_observer = ReactiveObservers::Observer::Container.new(Observer, Topic, trigger: :changed, notify: :init)
-        compared_observer1 = ReactiveObservers::Observer::Container.new(Observer.new, Topic, trigger: :changed, notify: :init)
+        compared_observer = ReactiveObservers::Observer::Container.new(CustomObserver, Topic, trigger: :changed, notify: :init)
+        compared_observer1 = ReactiveObservers::Observer::Container.new(CustomObserver.new, Topic, trigger: :changed, notify: :init)
         refute ReactiveObservers::Observer::ContainerComparator.new(compared_observer).full?(compared_observer1)
 
-        compared_observer = ReactiveObservers::Observer::Container.new(Observer, Topic, trigger: :changed, notify: :init)
-        compared_observer1 = ReactiveObservers::Observer::Container.new(Observer, Topic.first, trigger: :changed, notify: :init)
+        compared_observer = ReactiveObservers::Observer::Container.new(CustomObserver, Topic, trigger: :changed, notify: :init)
+        compared_observer1 = ReactiveObservers::Observer::Container.new(CustomObserver, Topic.first, trigger: :changed, notify: :init)
         refute ReactiveObservers::Observer::ContainerComparator.new(compared_observer).full?(compared_observer1)
 
-        compared_observer = ReactiveObservers::Observer::Container.new(Observer, Topic.last, trigger: :changed, notify: :init)
-        compared_observer1 = ReactiveObservers::Observer::Container.new(Observer, Topic.first, trigger: :changed, notify: :init)
+        compared_observer = ReactiveObservers::Observer::Container.new(CustomObserver, Topic.last, trigger: :changed, notify: :init)
+        compared_observer1 = ReactiveObservers::Observer::Container.new(CustomObserver, Topic.first, trigger: :changed, notify: :init)
         refute ReactiveObservers::Observer::ContainerComparator.new(compared_observer).full?(compared_observer1)
 
-        compared_observer = ReactiveObservers::Observer::Container.new(Observer, Topic, trigger: ->() {})
-        compared_observer1 = ReactiveObservers::Observer::Container.new(Observer, Topic, trigger: ->() {})
+        compared_observer = ReactiveObservers::Observer::Container.new(CustomObserver, Topic, trigger: ->() {})
+        compared_observer1 = ReactiveObservers::Observer::Container.new(CustomObserver, Topic, trigger: ->() {})
         refute ReactiveObservers::Observer::ContainerComparator.new(compared_observer).full?(compared_observer1)
       end
     end

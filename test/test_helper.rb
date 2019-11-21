@@ -67,6 +67,18 @@ module ActiveSupport
     rescue ActiveRecord::StatementInvalid, Errno::EBADF => e # db can return errors during drop
       puts e.inspect
     end
+
+    setup do
+      Topic.active_observers = []
+      Comment.active_observers = []
+      ReactiveObservers.configuration.reset!
+    end
+
+    teardown do
+      Topic.active_observers = []
+      Comment.active_observers = []
+      ReactiveObservers.configuration.reset!
+    end
   end
 end
 
@@ -82,4 +94,12 @@ class Comment < ActiveRecord::Base
   include ReactiveObservers::Observable::Base
 
   belongs_to :topic
+end
+
+class CustomObserver
+  include ReactiveObservers::Base
+
+  def self.init(value); end
+
+  def changed(value, **observer); end
 end

@@ -10,24 +10,21 @@ module ReactiveObservers
 
         def changed(value, **observer); end
       end
-      class Observer
-        def changed(value, **observer); end
-      end
 
       test '#run_validations! - proper observer' do
-        observer = ReactiveObservers::Observer::Container.new(Observer, Topic.first, {})
+        observer = ReactiveObservers::Observer::Container.new(CustomObserver, Topic.first, {})
         assert ReactiveObservers::Observer::ContainerValidator.new(observer).run_validations!
 
-        observer = ReactiveObservers::Observer::Container.new(Observer, Topic, {})
+        observer = ReactiveObservers::Observer::Container.new(CustomObserver, Topic, {})
         assert ReactiveObservers::Observer::ContainerValidator.new(observer).run_validations!
       end
 
       test '#run_validations! - missing trigger method' do
         exception = assert_raise(ArgumentError) do
-          observer = ReactiveObservers::Observer::Container.new(Observer, Topic.first, trigger: :update)
+          observer = ReactiveObservers::Observer::Container.new(CustomObserver, Topic.first, trigger: :update)
           ReactiveObservers::Observer::ContainerValidator.new(observer).run_validations!
         end
-        assert_equal "Class ReactiveObservers::Observer::ContainerValidatorTest::Observer is missing required observed method update",
+        assert_equal "Class CustomObserver is missing required observed method update",
                      exception.message
       end
 
@@ -42,18 +39,16 @@ module ReactiveObservers
 
       test '#run_validations! - not active record is observed' do
         exception = assert_raise(ArgumentError) do
-          observer = ReactiveObservers::Observer::Container.new(Observer, Observer.new, {})
+          observer = ReactiveObservers::Observer::Container.new(CustomObserver, CustomObserver.new, {})
           ReactiveObservers::Observer::ContainerValidator.new(observer).run_validations!
         end
-        assert_equal "Class ReactiveObservers::Observer::ContainerValidatorTest::Observer is not Active Record class",
-                     exception.message
+        assert_equal "Class CustomObserver is not Active Record class", exception.message
 
         exception = assert_raise(ArgumentError) do
-          observer = ReactiveObservers::Observer::Container.new(Observer, Observer, {})
+          observer = ReactiveObservers::Observer::Container.new(CustomObserver, CustomObserver, {})
           ReactiveObservers::Observer::ContainerValidator.new(observer).run_validations!
         end
-        assert_equal "Class ReactiveObservers::Observer::ContainerValidatorTest::Observer is not Active Record class",
-                     exception.message
+        assert_equal "Class CustomObserver is not Active Record class", exception.message
       end
     end
   end

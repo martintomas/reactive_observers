@@ -5,14 +5,10 @@ require 'reactive_observers/observable/filtering'
 module ReactiveObservers
   module Observable
     class FilteringTest < ActiveSupport::TestCase
-      class Observer
-        def changed(value, **observer); end
-      end
-
       setup do
-        @observer1 = ReactiveObservers::Observer::Container.new(Observer, Topic.first, {})
-        @observer2 = ReactiveObservers::Observer::Container.new(Observer, Topic.first, on: [:create, :update], fields: [:first_name, :last_name])
-        @observer3 = ReactiveObservers::Observer::Container.new(Observer, Topic.first, on: [:update], fields: [:last_name])
+        @observer1 = ReactiveObservers::Observer::Container.new(CustomObserver, Topic.first, {})
+        @observer2 = ReactiveObservers::Observer::Container.new(CustomObserver, Topic.first, on: [:create, :update], fields: [:first_name, :last_name])
+        @observer3 = ReactiveObservers::Observer::Container.new(CustomObserver, Topic.first, on: [:update], fields: [:last_name])
         @observers = [@observer1, @observer2, @observer3]
       end
 

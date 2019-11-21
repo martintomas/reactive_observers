@@ -5,27 +5,15 @@ require 'reactive_observers/observer/container'
 module ReactiveObservers
   module Observable
     class BaseTest < ActiveSupport::TestCase
-      class Observer
-        def changed(value, **observer); end
-      end
-
-      setup do
-        Topic.active_observers = []
-      end
-
-      teardown do
-        Topic.active_observers = []
-      end
-
       test '.register_observer' do
-        observer = ReactiveObservers::Observer::Container.new(Observer, Topic, {})
+        observer = ReactiveObservers::Observer::Container.new(CustomObserver, Topic, {})
         Topic.register_observer observer
         assert_equal 1, Topic.active_observers.length
         assert Topic.active_observers.include?(observer)
       end
 
       test '.register_observer - do not register same observer twice' do
-        observer = ReactiveObservers::Observer::Container.new(Observer, Topic, {})
+        observer = ReactiveObservers::Observer::Container.new(CustomObserver, Topic, {})
         Topic.register_observer observer
         Topic.register_observer observer
         assert_equal 1, Topic.active_observers.length
@@ -33,35 +21,35 @@ module ReactiveObservers
       end
 
       test '.remove_observer - remove existent observer' do
-        observer = ReactiveObservers::Observer::Container.new(Observer, Topic, {})
+        observer = ReactiveObservers::Observer::Container.new(CustomObserver, Topic, {})
         Topic.active_observers = [observer]
         Topic.remove_observer observer.observer
         assert_equal [], Topic.active_observers
       end
 
       test '.remove_observer - remove nonexistent observer' do
-        observer = ReactiveObservers::Observer::Container.new(Observer, Topic, {})
+        observer = ReactiveObservers::Observer::Container.new(CustomObserver, Topic, {})
         Topic.active_observers = [observer]
         Topic.remove_observer Object
         assert_equal [observer], Topic.active_observers
       end
 
       test '#remove_observer - remove existent observer' do
-        observer = ReactiveObservers::Observer::Container.new(Observer, Topic.first, {})
+        observer = ReactiveObservers::Observer::Container.new(CustomObserver, Topic.first, {})
         Topic.active_observers = [observer]
         Topic.first.remove_observer observer.observer
         assert_equal [], Topic.active_observers
       end
 
       test '#remove_observer - remove nonexistent observer' do
-        observer = ReactiveObservers::Observer::Container.new(Observer, Topic.first, {})
+        observer = ReactiveObservers::Observer::Container.new(CustomObserver, Topic.first, {})
         Topic.active_observers = [observer]
         Topic.last.remove_observer Observer
         assert_equal [observer], Topic.active_observers
       end
 
       test '.process_observer_notification - insert' do
-        observer = ReactiveObservers::Observer::Container.new(Observer, Topic.first, {})
+        observer = ReactiveObservers::Observer::Container.new(CustomObserver, Topic.first, {})
         verify_notification_call_for!(observer, :create, {}) do
           Topic.process_observer_notification id: Topic.first.id, action: 'INSERT'
         end
@@ -69,7 +57,7 @@ module ReactiveObservers
 
       test '.process_observer_notification - update' do
         diff = { 'first_name' => 'John' }
-        observer = ReactiveObservers::Observer::Container.new(Observer, Topic.first, {})
+        observer = ReactiveObservers::Observer::Container.new(CustomObserver, Topic.first, {})
         verify_notification_call_for!(observer, :update, { diff: diff }) do
           Topic.process_observer_notification id: Topic.first.id, action: 'UPDATE', diff: diff
         end
@@ -77,7 +65,7 @@ module ReactiveObservers
 
       test '.process_observer_notification - delete' do
         diff = Topic.first.attributes
-        observer = ReactiveObservers::Observer::Container.new(Observer, Topic.first, {})
+        observer = ReactiveObservers::Observer::Container.new(CustomObserver, Topic.first, {})
         verify_notification_call_for!(observer, :destroy, {}) do
           Topic.process_observer_notification diff: diff, action: 'DELETE'
         end
@@ -85,13 +73,13 @@ module ReactiveObservers
 
       test '.process_observer_notification - unknown action' do
         assert_raise(StandardError) do
-          Topic.active_observers = [ReactiveObservers::Observer::Container.new(Observer, Topic, {})]
+          Topic.active_observers = [ReactiveObservers::Observer::Container.new(CustomObserver, Topic, {})]
           Topic.process_observer_notification action: 'WRONG_ACTION'
         end
       end
 
       test '.after_create - trigger notification' do
-        observer = ReactiveObservers::Observer::Container.new(Observer, Topic, {})
+        observer = ReactiveObservers::Observer::Container.new(CustomObserver, Topic, {})
         verify_notification_call_for!(observer, :create, {}, ignore_object_check: true) do
           Topic.create! name: 'third'
         end
@@ -99,7 +87,7 @@ module ReactiveObservers
 
       test '.after_update - trigger notification' do
         travel_to Time.current do
-          observer = ReactiveObservers::Observer::Container.new(Observer, Topic, {})
+          observer = ReactiveObservers::Observer::Container.new(CustomObserver, Topic, {})
           verify_notification_call_for!(observer, :update, { diff: { 'name' => 'first', 'updated_at' => Time.current.to_i }}) do
             Topic.first.update! name: 'third'
           end
@@ -107,27 +95,23 @@ module ReactiveObservers
       end
 
       test '.after_destroy - trigger notification' do
-        observer = ReactiveObservers::Observer::Container.new(Observer, Topic, {})
+        observer = ReactiveObservers::Observer::Container.new(CustomObserver, Topic, {})
         verify_notification_call_for!(observer, :destroy, {}) do
           Topic.first.destroy!
         end
       end
 
       test '#process_observer_hook_notification - ignore when active record is trigger based' do
-        Topic.active_observers = [ReactiveObservers::Observer::Container.new(Observer, Topic, {})]
-        Comment.active_observers = [ReactiveObservers::Observer::Container.new(Observer, Comment, {})]
-        Configuration.instance.observed_tables = [:topics]
+        Topic.active_observers = [ReactiveObservers::Observer::Container.new(CustomObserver, Topic, {})]
+        Comment.active_observers = [ReactiveObservers::Observer::Container.new(CustomObserver, Comment, {})]
+        ReactiveObservers.configuration.observed_tables = [:topics]
 
         assert_nil Topic.first.process_observer_hook_notification :create
         refute_nil Comment.first.process_observer_hook_notification :create
-
-        Comment.active_observers = []
-        Configuration.instance.observed_tables = []
       end
 
       test '#process_observer_hook_notification - notification is not performed when no active observer exists' do
-        Topic.active_observers = [ReactiveObservers::Observer::Container.new(Observer, Topic, {})]
-        Comment.active_observers = []
+        Topic.active_observers = [ReactiveObservers::Observer::Container.new(CustomObserver, Topic, {})]
 
         refute_nil Topic.first.process_observer_hook_notification :create
         assert_nil Comment.first.process_observer_hook_notification :create

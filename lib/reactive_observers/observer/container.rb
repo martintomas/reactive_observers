@@ -15,7 +15,7 @@ module ReactiveObservers
         @on = Array.wrap options[:on]
         @fields = Array.wrap options[:fields]
         @only = options[:only]
-        @trigger = options[:trigger] || Configuration.instance.default_trigger
+        @trigger = options[:trigger] || ReactiveObservers.configuration.default_trigger
         @notify = options[:notify]
         @refine = options[:refine]
         @context = options[:context]
