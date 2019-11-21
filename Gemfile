@@ -10,6 +10,7 @@ group :test do
   gem 'minitest-reporters'
   gem 'minitest-stub_any_instance'
   gem 'simplecov'
+  gem 'codecov'
 
   gem 'pg'
   gem 'activerecord-postgis-adapter'
