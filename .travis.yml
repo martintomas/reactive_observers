@@ -1,8 +1,13 @@
 ---
 language: ruby
 cache: bundler
-services:
-  - postgresql
 rvm:
   - 2.6.3
+addons:
+  postgresql: 9.6
+  apt:
+    packages:
+      - postgresql-9.6-postgis-2.3
+before_script:
+  - psql -U postgres -c "create extension postgis"
 before_install: gem install bundler -v 2.1.0.pre.3
