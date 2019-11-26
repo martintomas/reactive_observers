@@ -1,5 +1,6 @@
 # ReactiveObservers
 
+[![Gem Version](https://badge.fury.io/rb/reactive_observers.svg)](https://badge.fury.io/rb/reactive_observers)
 [![Build Status](https://travis-ci.com/martintomas/reactive_observers.svg?branch=master)](https://travis-ci.com/martintomas/reactive_observers)
 [![codecov](https://codecov.io/gh/martintomas/reactive_observers/branch/master/graph/badge.svg)](https://codecov.io/gh/martintomas/reactive_observers)
 
