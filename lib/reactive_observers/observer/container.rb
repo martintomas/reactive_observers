@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'reactive_observers/observer/container_validator'
 require 'reactive_observers/observer/container_comparator'
 

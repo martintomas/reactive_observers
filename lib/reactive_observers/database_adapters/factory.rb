@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'reactive_observers/database_adapters/postgresql_adapter'
 
 module ReactiveObservers

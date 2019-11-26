@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ReactiveObservers
   class Configuration
 
@@ -8,9 +10,9 @@ module ReactiveObservers
     end
 
     def reset!
-      @listening_job_name = "%{table_name}_notices"
-      @observed_tables = []
-      @default_trigger = :changed
+      @listening_job_name = "%{table_name}_notices" # trigger listens for these type of notices
+      @observed_tables = [] # these tables are observed at database level
+      @default_trigger = :changed # default name of method that is called inside observer during notification
     end
   end
 end

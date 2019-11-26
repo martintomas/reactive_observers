@@ -6,8 +6,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ["martintomas"]
   spec.email         = ["tomas@jchsoft.cz"]
 
-  spec.summary       = %q{Observe Active Record classes and records super simple way!}
-  spec.description   = %q{This gem allows you to write down specialized Observer classes or make observer from every possible class/object that You can think of. Observable module is using build in Active Record hooks or database triggers which can be turned on in multiple App environment. }
+  spec.summary       = %q{Observe Active Record classes and records reactive way!}
+  spec.description   = %q{Every class or object can be transformed to observer and dynamically react to data changes across several models. Observable module is using build in Active Record hooks or database triggers which can be turned on in multiple App environment. }
   spec.homepage      = "https://github.com/martintomas/reactive_observers.git"
   spec.license       = "MIT"
   spec.required_ruby_version = Gem::Requirement.new(">= 2.3.0")

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'reactive_observers/observable/filtering'
 
 module ReactiveObservers
