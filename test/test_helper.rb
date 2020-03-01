@@ -1,7 +1,7 @@
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require 'simplecov'
 SimpleCov.start do
-  add_filter %w[/bin/ /test/ Gemfile Rakefile reactive_observers.gemspec]
+  add_filter %w[/bin/ /test/ /lib/generators/ Gemfile Rakefile reactive_observers.gemspec]
 end
 
 require 'codecov'

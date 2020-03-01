@@ -4,7 +4,7 @@
 [![Build Status](https://travis-ci.com/martintomas/reactive_observers.svg?branch=master)](https://travis-ci.com/martintomas/reactive_observers)
 [![codecov](https://codecov.io/gh/martintomas/reactive_observers/branch/master/graph/badge.svg)](https://codecov.io/gh/martintomas/reactive_observers)
 
-This gem can make observer from every possible class or object. Observer relation can be defined at Class level and processed dynamically when appropriate record changes. Observable module is using build in Active Record hooks or database triggers which can be turned on for specified tables in multiple App environment.
+This gem can transform every possible class or object to observer. Observer relation can be defined at Class level and processed dynamically when appropriate record changes. Observable module is using build in Active Record hooks or database triggers which can be turned on for specified tables in multiple App environment.
 
 ```ruby
 class Topic < ActiveRecord::Base; end
@@ -40,7 +40,7 @@ Or install it yourself as:
 
 ## Usage
 
-Observing relation can be initialized between object/class pairs. Observer can be any class or object. Observable has to be always Active Record class or object. It is recommended to define class observers as often as possible, because It enables to observe all active records independently and initialize all required data after observer is triggered. 
+Observing relation can be initialized between object/class pairs. Observer can be any class or object. Observable entity has to be always Active Record class or object. It is recommended to define class observers as often as possible, because It enables to observe all active records independently and initialize all required data after observing action is triggered. It is also quite easy to maintain Observer classes when whole logic is encapsulated at one place. 
 
 Every class can be transformed to observer just by including following module:
 
@@ -56,8 +56,8 @@ Observe method accepts several different arguments which are:
     * `fields` - observer is notified only when specified active record attributes are changed, for example: `fields: [:first_name, :last_name]`
     * `only` - accepts Proc and can do additional complex filtering, for example: `only: ->(active_record) { active_record.type == 'ObservableType' }`
 * active options
-    * `trigger` - can be symbol or Proc and defines action which is called on observer, for example: `trigger: :recompute_statistics`. Default value, which can be changed through configuration, is `:changed`. 
-    * `notify` - can be Symbol or Proc and defines action which is used to initialize observes class, for example: `notify: :load_all_dependent_objects`
+    * `trigger` - accepts symbol or Proc and defines action which is called on observer, for example: `trigger: :recompute_statistics`. Default value, which can be changed through configuration, is `:changed`. 
+    * `notify` - accepts be Symbol or Proc and defines action which is used to initialize observer class, for example: `notify: :load_all_dependent_objects`
     * `refine` - accepts Proc and defines operation which is done with active record object before observer is called, for example: `refine: ->(active_record) { active_record.topics }`
 * additional options
     * `context` - observer can be registered with context information which is provided back from observed object when notification happens. Example of such option can be for example: `context: :topic`
@@ -96,7 +96,7 @@ class TopicsStatisticService
 end
 ```
 
-Class observers can become a bit tricky when initialization method is defined inside observer.
+It can be a bit tricky when classes with complex initialization process are transformed to observer - in such case, `notify` parameter is required which specifies how observer class is initialized
 
 ```ruby
 class TopicStatisticService
@@ -113,7 +113,7 @@ class TopicStatisticService
 end
 ```
 
-Initialize method of class can quickly get out of the hand and It can be impossible to initialize it only with observed object information. Fortunately, observing can be defined at object level which doesn't require initialization.
+Initialize method of class can quickly get out of the hand and It can be impossible to initialize it only with observed object data. Fortunately, observing can be defined at object level which doesn't require initialization at all.
 
 ```ruby
 class ComplexStatisticsService
@@ -183,13 +183,17 @@ To enable database observers, following configuration needs to be put into initi
       config.observed_tables = [:topics] # names of tables which should be observed
     end
     
-It is also required to create appropriate database triggers. __TODO:__ prepare jobs that generates appropriate triggers for defined tables.
+It is also required to create database triggers for observed tables which can be done with following command:
+ 
+    rails g reactive_observers:postgresql_listeners topics comments
+ 
+This example will generate migration for PostgreSQL database and add triggers to topics and comments tables.
 
-Gem listens on `TG_TABLE_NAME_notices` which for example means that observer for topic table will listen on `topic_notices`. This default behaviour can be changed at configuration:
+Gem listens on `TG_TABLE_NAME_notices` which for example means that observer for topics table will listen on `topic_notices`. This default behaviour can be changed at configuration:
 
     $ ReactiveObservers.configure { |config| config.listening_job_name = "%{table_name}_notices" }
     
-Data obtained through trigger are forwarded to observers, but can be also used for different purposes (not just observing). It is possible to register any method that can process trigger data at any active record model:
+Data obtained through trigger are forwarded to observers, but can be also used for different purposes (not just observing). It is possible to register any method that can process triggered data for any active record model:
 
 ```ruby
 class Topic < ActiveRecord::Base

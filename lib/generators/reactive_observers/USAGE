@@ -1,0 +1,8 @@
+Description:
+    This generator creates migration with listeners for appropriate tables and database type
+
+Example:
+    rails g reactive_observers:postgresql_listeners topics comments
+
+    This will create:
+        db/migrate/#{Time.now.strftime "%Y%m%d%H%M%S"}_create_postgresql_listeners.rb
