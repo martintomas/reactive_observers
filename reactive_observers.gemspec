@@ -4,7 +4,7 @@ Gem::Specification.new do |spec|
   spec.name          = "reactive_observers"
   spec.version       = ReactiveObservers::VERSION
   spec.authors       = ["martintomas"]
-  spec.email         = ["tomas@jchsoft.cz"]
+  spec.email         = ["martintomas@seznam.cz"]
 
   spec.summary       = %q{Observe Active Record classes and records reactive way!}
   spec.description   = %q{Every class or object can be transformed to observer and dynamically react to data changes across several models. Observable module is using build in Active Record hooks or database triggers which can be turned on in multiple App environment. }
@@ -30,6 +30,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency "activerecord", ">= 5.0"
 
   spec.add_development_dependency "bundler", "~> 2.0"
-  spec.add_development_dependency "rake", "~> 10.0"
   spec.add_development_dependency "minitest", "~> 5.0"
+  spec.add_development_dependency "rake", ">= 12.3.3"
 end
