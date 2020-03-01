@@ -10,6 +10,7 @@ module ReactiveObservers
       attr_accessor :observer, :observed
       attr_accessor :trigger, :notify, :refine, :context
       attr_accessor :fields, :on, :only, :constrain
+      attr_accessor :trigger_with_previous_values
 
       def initialize(observer, observed, options)
         @observer = observer
@@ -23,6 +24,7 @@ module ReactiveObservers
         @context = options[:context]
         ReactiveObservers::Observer::ContainerValidator.new(self).run_validations!
         @constrain = load_observer_constrains
+        @trigger_with_previous_values = options[:trigger_with_previous_values] || false
       end
 
       def compare

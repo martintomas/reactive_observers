@@ -14,9 +14,10 @@ module ReactiveObservers
 
       def perform
         filter_observers.each do |observer|
-          next if observer.only.present? && !observer.only.call(@observed_object)
-
-          trigger_actions_for observer, Array.wrap(refine_observer_records_for(observer))
+          process observer, @observed_object
+          if @action == :update && observer.trigger_with_previous_values
+            process observer, @observed_object.clone.assign_attributes(@options[:diff])
+          end
         end
       end
 
@@ -24,6 +25,12 @@ module ReactiveObservers
 
       def filter_observers
         @filtered_observers ||= Filtering.new(@observed_object.id, @observers, @action, @options).perform
+      end
+
+      def process(observer, observed_object)
+        return if observer.only.present? && !observer.only.call(observed_object)
+
+        trigger_actions_for observer, Array.wrap(refine_observer_records_for(observer, observed_object))
       end
 
       def trigger_actions_for(observer, records)
@@ -42,10 +49,10 @@ module ReactiveObservers
         trigger.call record, observer.to_h
       end
 
-      def refine_observer_records_for(observer)
-        return @observed_object if observer.refine.blank?
+      def refine_observer_records_for(observer, observed_object)
+        return observed_object if observer.refine.blank?
 
-        observer.refine.call @observed_object
+        observer.refine.call observed_object
       end
 
       def observer_objects_for(observer, record)

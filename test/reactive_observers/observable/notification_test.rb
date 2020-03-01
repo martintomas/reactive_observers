@@ -8,8 +8,19 @@ module ReactiveObservers
     class NotificationTest <  ActiveSupport::TestCase
       class ObserverNotified < StandardError; end
       class DummyObservable
+        attr_reader :values
+
+        def initialize
+          @values = { id: 1 }
+        end
+
+        def assign_attributes(**options)
+          values[:id] = options[:id]
+          self
+        end
+
         def id
-          1
+          values[:id]
         end
       end
 
@@ -182,6 +193,26 @@ module ReactiveObservers
             observer.observer = DummyObserver.new
             ReactiveObservers::Observable::Notification.new(DummyObserver.new, [observer], :update, {}).perform
           end
+        end
+      end
+
+      test '#perform - observer can be called twice with old and new values' do
+        turn_off_active_record_check! do |observer|
+          collect_updated_value = 0
+          observer.trigger_with_previous_values = true
+          observer.trigger = -> (value, **observer) { collect_updated_value += value.id }
+          ReactiveObservers::Observable::Notification.new(DummyObservable.new, [observer], :update, diff: { id: 2 }).perform
+          assert_equal DummyObservable.new.id + 2, collect_updated_value
+        end
+      end
+
+      test '#perform - observer is called only once with new values when update did not happen' do
+        turn_off_active_record_check! do |observer|
+          collect_updated_value = 0
+          observer.trigger_with_previous_values = true
+          observer.trigger = -> (value, **observer) { collect_updated_value += value.id }
+          ReactiveObservers::Observable::Notification.new(DummyObservable.new, [observer], :create, diff: { id: 2 }).perform
+          assert_equal DummyObservable.new.id, collect_updated_value
         end
       end
 
